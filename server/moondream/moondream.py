@@ -1,7 +1,7 @@
 import torch
-from .vision_encoder import VisionEncoder
-from .text_model import TextModel
-from .configuration_moondream import MoondreamConfig
+from vision_encoder import VisionEncoder
+from text_model import TextModel
+from configuration_moondream import MoondreamConfig
 from transformers import PreTrainedModel
 import re
 

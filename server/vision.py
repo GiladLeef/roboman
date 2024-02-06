@@ -1,5 +1,5 @@
 from PIL import Image
-from moondream import Moondream, detect_device
+from moondream.Moondream import Moondream
 from transformers import TextIteratorStreamer, CodeGenTokenizerFast as Tokenizer
 from queue import Queue
 from threading import Thread
