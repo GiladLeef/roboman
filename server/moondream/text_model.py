@@ -1,7 +1,7 @@
 from torch import nn
 import transformers
-from modeling_phi import PhiForCausalLM
-from configuration_moondream import PhiConfig
+from moondream.modeling_phi import PhiForCausalLM
+from moondream.configuration_moondream import PhiConfig
 
 transformers.logging.set_verbosity_error()
 
