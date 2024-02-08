@@ -19,6 +19,7 @@ def record_callback(_, audio: sr.AudioData, data_queue: Queue) -> None:
         
 def process_audio(data_queue, audio_model, client_socket):
     phrase_time = None
+    data_available_event = Event()
     while True:
         try:
             now = datetime.utcnow()
@@ -50,7 +51,9 @@ def process_audio(data_queue, audio_model, client_socket):
                 utils.send_data(client_socket, "IMAGE", pil_image)
                 utils.send_data(client_socket, "PROMPT", processed_prompt)
 
-                server_response = utils.receive_data(client_socket)
+                server_response = utils.receive_data(client_socket, data_available_event)
+                data_available_event.clear()  # Reset the event after handling data
+
                 print(f"Server Response: {server_response}")
 
                 pause_listen_event.set()
