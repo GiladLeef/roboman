@@ -1,30 +1,27 @@
+import argparse
 import cv2
 from PIL import Image
 import socket
 import numpy as np
 from datetime import datetime, timedelta
 from queue import Queue
-from threading import Thread
+from threading import Thread, Event
 import speech_recognition as sr
 import torch
 import whisper
 import utils
-from threading import Thread, Event
-import server
+import data
 
 pause_listen_event = Event()
 
 def record_callback(_, audio: sr.AudioData, data_queue: Queue) -> None:
     if not pause_listen_event.is_set():
         data_queue.put(audio.get_raw_data())
-        
+
 def process_audio(data_queue, audio_model, client_socket):
     phrase_time = None
     data_available_event = Event()
-    webcam_frame = cv2.VideoCapture(0).read()[1]
-    pil_image = Image.fromarray(cv2.cvtColor(webcam_frame, cv2.COLOR_BGR2RGB))
-    server.send_image(client_socket, pil_image)
-    
+
     while True:
         try:
             now = datetime.utcnow()
@@ -43,10 +40,10 @@ def process_audio(data_queue, audio_model, client_socket):
 
                 words = text.lower().split()
                 print(words)
-                server.send_prompt(client_socket, text)
+                data.send_prompt(client_socket, text)
                 full_response = ""
                 while True:
-                    server_response = server.receive_data(client_socket, data_available_event)
+                    server_response = data.receive_data(client_socket, data_available_event)
                     data_available_event.clear()
                     server_response_decoded = server_response.decode('utf-8').strip()
 
@@ -67,6 +64,11 @@ def process_audio(data_queue, audio_model, client_socket):
             break
 
 def main():
+    parser = argparse.ArgumentParser(description='Speech Recognition with Image Display')
+    parser.add_argument('--image', help='Path to the image file for processing instead of using webcam')
+
+    args = parser.parse_args()
+
     model = "base.en"
     data_queue = Queue()
 
@@ -84,6 +86,14 @@ def main():
     client_socket = utils.setup_socket()
 
     try:
+        if args.image:
+            pil_image = Image.open(args.image)
+            data.send_image(client_socket, pil_image)
+        else:
+            webcam_frame = cv2.VideoCapture(0).read()[1]
+            pil_image = Image.fromarray(cv2.cvtColor(webcam_frame, cv2.COLOR_BGR2RGB))
+            data.send_image(client_socket, pil_image)
+
         audio_thread = Thread(target=process_audio, args=(data_queue, audio_model, client_socket))
         audio_thread.start()
 
