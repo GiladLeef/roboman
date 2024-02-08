@@ -67,7 +67,7 @@ class PhiConfig(PretrainedConfig):
 
 
 class MoondreamConfig(PretrainedConfig):
-    model_type = "moondream1"
+    model_type = "moondream"
 
     def __init__(self, **kwargs):
         self.phi_config = PhiConfig(**kwargs)
