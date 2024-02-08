@@ -20,6 +20,10 @@ def record_callback(_, audio: sr.AudioData, data_queue: Queue) -> None:
 def process_audio(data_queue, audio_model, client_socket):
     phrase_time = None
     data_available_event = Event()
+    webcam_frame = cv2.VideoCapture(0).read()[1]
+    pil_image = Image.fromarray(cv2.cvtColor(webcam_frame, cv2.COLOR_BGR2RGB))
+    utils.send_data(client_socket, "IMAGE", pil_image)
+    
     while True:
         try:
             now = datetime.utcnow()
@@ -44,11 +48,7 @@ def process_audio(data_queue, audio_model, client_socket):
                 
                 else:
                     processed_prompt = text
-                    
-                webcam_frame = cv2.VideoCapture(0).read()[1]
-                pil_image = Image.fromarray(cv2.cvtColor(webcam_frame, cv2.COLOR_BGR2RGB))
 
-                utils.send_data(client_socket, "IMAGE", pil_image)
                 utils.send_data(client_socket, "PROMPT", processed_prompt)
 
                 server_response = utils.receive_data(client_socket, data_available_event)
