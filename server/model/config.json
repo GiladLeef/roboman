@@ -6,7 +6,7 @@
     "AutoConfig": "configuration_moondream.MoondreamConfig",
     "AutoModelForCausalLM": "moondream.Moondream"
   },
-  "model_type": "moondream1",
+  "model_type": "moondream",
   "phi_config": {
     "model_type": "phi-msft"
   },
