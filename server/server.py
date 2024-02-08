@@ -54,6 +54,9 @@ def main():
                 except RuntimeError as e:
                     print(f"Error receiving data: {e}")
                     continue
+                except:
+                    print("connection lost. Waiting for a new client...")
+                    break
 
         finally:
             client_socket.close()
