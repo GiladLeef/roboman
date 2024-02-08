@@ -63,6 +63,7 @@ def receive_data(socket, data_available_event):
         else:
             # Optionally add a delay or other logic here to control the polling frequency
             pass
+            
 def send_data(socket, data_type, data):
     # Send data type (4 bytes for a string)
     socket.send(struct.pack("!I", len(data_type)))
