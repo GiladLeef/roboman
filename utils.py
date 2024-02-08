@@ -37,28 +37,32 @@ def webcam(webcam_id=0):
 
     return frame
 
-def receive_data(socket):
-    # Receive data size (4 bytes for an integer)
-    data_size_data = b''
-    while len(data_size_data) < 4:
-        chunk = socket.recv(4 - len(data_size_data))
-        if not chunk:
-            raise RuntimeError("Socket connection broken")
-        data_size_data += chunk
+def receive_data(socket, data_available_event):
+    while True:
+        # Receive data size (4 bytes for an integer)
+        data_size_data = b''
+        while len(data_size_data) < 4:
+            chunk = socket.recv(4 - len(data_size_data))
+            if not chunk:
+                raise RuntimeError("Socket connection broken")
+            data_size_data += chunk
 
-    data_size = struct.unpack("!I", data_size_data)[0]
+        data_size = struct.unpack("!I", data_size_data)[0]
 
-    # Receive data
-    data = b''
-    while len(data) < data_size:
-        chunk = socket.recv(data_size - len(data))
-        if not chunk:
-            raise RuntimeError("Socket connection broken")
-        data += chunk
+        # Receive data
+        data = b''
+        while len(data) < data_size:
+            chunk = socket.recv(data_size - len(data))
+            if not chunk:
+                raise RuntimeError("Socket connection broken")
+            data += chunk
 
-    return pickle.loads(data)
-
-
+        if data:
+            data_available_event.set()  # Signal that new data is available
+            return pickle.loads(data)
+        else:
+            # Optionally add a delay or other logic here to control the polling frequency
+            pass
 def send_data(socket, data_type, data):
     # Send data type (4 bytes for a string)
     socket.send(struct.pack("!I", len(data_type)))
