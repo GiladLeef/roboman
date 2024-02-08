@@ -5,6 +5,7 @@ import torch
 import socket
 import pickle
 import struct
+import traceback  # Add this import for printing stack traces
 import utils
 
 def main():
@@ -41,11 +42,8 @@ def main():
                         image_embeds = vision.get_embeddings(pil_image, moondream)
                     elif data_type == "PROMPT":
                         prompt = data
-
                         # Process the image and prompt
-                        answer, chat_history = utils.process_image(prompt, moondream, image_embeds, tokenizer, chat_history)
-                        # Send the answer back to the client
-                        utils.send_answer(client_socket, answer)
+                        chat_history = utils.process_image(prompt, moondream, image_embeds, tokenizer, chat_history, client_socket)
 
                 except ConnectionResetError:
                     print("Client closed the connection. Waiting for a new client...")
@@ -53,9 +51,12 @@ def main():
 
                 except RuntimeError as e:
                     print(f"Error receiving data: {e}")
+                    traceback.print_exc()  # Print stack trace
                     continue
-                except:
-                    print("connection lost. Waiting for a new client...")
+
+                except Exception as e:
+                    print(f"Error: {e}")
+                    traceback.print_exc()  # Print stack trace
                     break
 
         finally:

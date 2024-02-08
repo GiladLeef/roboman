@@ -1,0 +1,1 @@
+cd server && start python server.py && cd .. && cd client && python main.py

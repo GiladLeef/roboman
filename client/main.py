@@ -10,6 +10,7 @@ import torch
 import whisper
 import utils
 from threading import Thread, Event
+import server
 
 pause_listen_event = Event()
 
@@ -22,7 +23,7 @@ def process_audio(data_queue, audio_model, client_socket):
     data_available_event = Event()
     webcam_frame = cv2.VideoCapture(0).read()[1]
     pil_image = Image.fromarray(cv2.cvtColor(webcam_frame, cv2.COLOR_BGR2RGB))
-    utils.send_data(client_socket, "IMAGE", pil_image)
+    server.send_image(client_socket, pil_image)
     
     while True:
         try:
@@ -42,22 +43,24 @@ def process_audio(data_queue, audio_model, client_socket):
 
                 words = text.lower().split()
                 print(words)
+                server.send_prompt(client_socket, text)
+                full_response = ""
+                while True:
+                    server_response = server.receive_data(client_socket, data_available_event)
+                    data_available_event.clear()
+                    server_response_decoded = server_response.decode('utf-8').strip()
 
-                if len(words) >= 2 and any("bot" in word for word in words[:2]):
-                    processed_prompt = " ".join(words[2:]).strip()
-                
-                else:
-                    processed_prompt = text
-
-                utils.send_data(client_socket, "PROMPT", processed_prompt)
-
-                server_response = utils.receive_data(client_socket, data_available_event)
-                data_available_event.clear()  # Reset the event after handling data
-
-                print(f"Server Response: {server_response}")
+                    if "<" in server_response_decoded:
+                        server_response_decoded = server_response_decoded.rstrip("<END")
+                        print(server_response_decoded, end=' ', flush=True)
+                        full_response += server_response_decoded + ' '
+                        break
+                    else:
+                        print(server_response_decoded, end=' ', flush=True)
+                        full_response += server_response_decoded + ' '
 
                 pause_listen_event.set()
-                utils.speak(server_response)
+                utils.speak(full_response)
                 pause_listen_event.clear()
 
         except KeyboardInterrupt:
@@ -71,7 +74,7 @@ def main():
     source = sr.Microphone(sample_rate=16000)
     audio_model = whisper.load_model(model)
 
-    record_timeout = 1
+    record_timeout = 2
 
     listen_thread = recorder.listen_in_background(source, lambda _, audio: record_callback(_, audio, data_queue),
                                                    phrase_time_limit=record_timeout)
