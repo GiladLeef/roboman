@@ -66,7 +66,7 @@ def process_audio(data_queue, audio_model, client_socket):
             break
 
 def main():
-    parser = argparse.ArgumentParser(description='Speech Recognition with Image Display')
+    parser = argparse.ArgumentParser(description='ChatGPT-like Ai for Computer Vision')
     parser.add_argument('--image', help='Path to the image file for processing instead of using webcam')
 
     args = parser.parse_args()
