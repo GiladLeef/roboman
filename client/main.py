@@ -11,6 +11,7 @@ import torch
 import whisper
 import utils
 import data
+import time
 
 pause_listen_event = Event()
 
@@ -58,6 +59,7 @@ def process_audio(data_queue, audio_model, client_socket):
 
                 pause_listen_event.set()
                 utils.speak(full_response)
+                time.sleep(1)
                 pause_listen_event.clear()
 
         except KeyboardInterrupt:
